@@ -1,2 +1,28 @@
 //js
+'use strict'
+var a;
+var $b=1;
+var s_007='007';
+var Answer=true;
+var t=null;
 var arr=[1,2,3.14,'hhh',null,true]
+
+//'你好'+name+‘了’===`你好，${name},了`
+var s=‘hello, world!’;
+s.length;//13
+s[0];//'h';
+s[13];//undefined
+var s='hello';
+alert(s);
+s.toUpperCase();//'HELLO'
+var arr=[1,2,3.14,'hhh',null,true];
+arr.length;
+var arr=['a','b','c'];
+arr[1]=99;
+var arr=[1,2,3];
+arr[5]='x';
+arr;//arr变为[1,2,3,undefined,undefined,'x']
+arr.indexOf(1);
+var arr = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+arr.slice(0, 3); // 从索引0开始，到索引3结束，但不包括索引3: ['A', 'B', 'C']
+arr.slice(3); // 从索引3开始到结束: ['D', 'E', 'F', 'G']
