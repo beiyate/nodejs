@@ -1,5 +1,5 @@
 # Auto detect text files and perform LF normalization
-.gitignore
+
 # Windows:
 Thumbs.db
 ehthumbs.db
@@ -16,5 +16,5 @@ build
 # My configurations:
 db.ini
 deploy_key_rsa
-/build/
-/.vscode/
+build/
+.vscode/
