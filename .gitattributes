@@ -16,5 +16,5 @@ build
 # My configurations:
 db.ini
 deploy_key_rsa
-build/
-.vscode/
+/build/
+/.vscode/
