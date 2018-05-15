@@ -54,4 +54,13 @@ var arr = ['A', 'B', 'C'];
 arr.concat(1, 2, [3, 4]); // ['A', 'B', 'C', 1, 2, 3, 4]
 var arr = ['A', 'B', 'C', 1, 2, 3];
 arr.join('-'); // 'A-B-C-1-2-3'
+//对象
+var xiaoming={
+    name:'xiaoming',
+    birth:1990,
+    school:'no.1 middle school',
+    height:1.70,
+    weight:65,
+    score:null    
+};
 
