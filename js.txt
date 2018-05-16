@@ -61,6 +61,76 @@ var xiaoming={
     school:'no.1 middle school',
     height:1.70,
     weight:65,
-    score:null    
+    score:null,
+    'm-school':'mmmmschool'    
 };
+xiaoming.name;//'xiaoming'
+xiaoming['m-school'];//
+'name' in xiaoming;
+xiaoming.hasOwnProperty('name'); // true
+xiaoming.hasOwnProperty('toString'); // false
+var s='123';
+if(s.length){
+    //JavaScript把null、undefined、0、NaN和空字符串''视为false
+    //其他值一概视为true，因此上述代码条件判断的结果是true。
+}
 
+//循环
+var x=0;
+var i;
+for(i=1;i<=10000;i++){
+    x=x+i;
+}
+x;
+
+var x = 0;
+for (;;) { //3个条件均可省略 将无限循环下去
+    if (x > 100) {
+        break; // 通过if判断来退出循环
+    }
+    x ++;
+}
+
+//for ... in
+var o = {
+    name: 'Jack',
+    age: 20,
+    city: 'Beijing'
+};
+for (var key in o) {
+    console.log(key); // 'name', 'age', 'city'
+}
+
+var o = {
+    name: 'Jack',
+    age: 20,
+    city: 'Beijing'
+};
+for (var key in o) {
+    console.log(o[key]); // 'Jack', '20', 'Beijing'
+}
+//要过滤掉对象继承的属性，用hasOwnProperty()来实现
+var o = {
+    name: 'Jack',
+    age: 20,
+    city: 'Beijing'
+};
+for (var key in o) {
+    if (o.hasOwnProperty(key)) {
+        console.log(key); // 'name', 'age', 'city'
+    }
+}
+
+var x = 0;
+var n = 99;
+while (n > 0) {
+    x = x + n;
+    n = n - 2;
+}
+x; // 2500
+
+var n = 0;
+do {
+    n = n + 1;
+} while (n < 100);
+n; // 100
