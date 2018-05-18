@@ -273,3 +273,274 @@ JavaScript的函数内部如果调用了this，那么这个this到底指向谁�
 
 如果单独调用函数，比如getAge()，此时，该函数的this指向全局对象，也就是window。
 
+更坑爹的是，如果这么写：
+
+var fn = xiaoming.age; // 先拿到xiaoming的age函数
+fn(); // NaN
+
+也是不行的！要保证this指向正确，必须用obj.xxx()的形式调用！
+
+修复的办法也不是没有，我们用一个that变量首先捕获this：
+
+'use strict';
+
+var xiaoming = {
+    name: '小明',
+    birth: 1990,
+    age: function () {
+        var that = this; // 在方法内部一开始就捕获this
+        function getAgeFromBirth() {
+            var y = new Date().getFullYear();
+            return y - that.birth; // 用that而不是this
+        }
+        return getAgeFromBirth();
+    }
+};
+
+xiaoming.age(); // 25
+
+用var that = this;，你就可以放心地在方法内部定义其他函数，而不是把所有语句都堆到一个方法中。
+
+要指定函数的this指向哪个对象，可以用函数本身的apply方法，
+它接收两个参数，第一个参数就是需要绑定的this变量，第二个参数是Array，表示函数本身的参数。
+
+用apply修复getAge()调用：
+function getAge() {
+    var y = new Date().getFullYear();
+    return y - this.birth;
+}
+
+var xiaoming = {
+    name: '小明',
+    birth: 1990,
+    age: getAge
+};
+
+xiaoming.age(); // 25
+getAge.apply(xiaoming, []); // 25, this指向xiaoming, 参数为空
+另一个与apply()类似的方法是call()，唯一区别是：
+
+    apply()把参数打包成Array再传入；
+
+    call()把参数按顺序传入。
+
+比如调用Math.max(3, 5, 4)，分别用apply()和call()实现如下：
+
+Math.max.apply(null, [3, 5, 4]); // 5
+Math.max.call(null, 3, 5, 4); // 5
+
+对普通函数调用，我们通常把this绑定为null。
+
+利用apply()，我们还可以动态改变函数的行为。
+'use strict';
+
+var count = 0;
+var oldParseInt = parseInt; // 保存原函数
+
+window.parseInt = function () {
+    count += 1;
+    return oldParseInt.apply(null, arguments); // 调用原函数
+};
+// 测试:
+parseInt('10');
+parseInt('20');
+parseInt('30');
+console.log('count = ' + count); // 3
+
+//高阶函数英文叫Higher-order function。那么什么是高阶函数？
+
+JavaScript的函数其实都指向某个变量。既然变量可以指向函数，
+函数的参数能接收变量，那么一个函数就可以接收另一个函数作为参数
+，这种函数就称之为高阶函数。
+
+一个最简单的高阶函数：
+
+function add(x, y, f) {
+    return f(x) + f(y);
+}
+
+//MAP
+'use strict';
+
+function pow(x) {
+    return x * x;
+}
+var arr = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+var results = arr.map(pow); // [1, 4, 9, 16, 25, 36, 49, 64, 81]
+console.log(results);
+1,4,9,16,25,36,49,64,81
+
+//map对于使用map的对象的每一个属性各一的进行所调用的函数进行处理
+var arr = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+arr.map(String); // ['1', '2', '3', '4', '5', '6', '7', '8', '9']
+
+//reduce
+
+Array的reduce()把一个函数作用在这个Array的[x1, x2, x3...]上，这个函数必须接收两个参数，
+reduce()把结果继续和序列的下一个元素做累积计算，其效果就是：
+
+比方说对一个Array求和，就可以用reduce实现：
+
+var arr = [1, 3, 5, 7, 9];
+arr.reduce(function (x, y) {
+    return x + y;
+}); // 25
+
+要把[1, 3, 5, 7, 9]变换成整数13579，reduce()也能派上用场：
+
+var arr = [1, 3, 5, 7, 9];
+arr.reduce(function (x, y) {
+    return x * 10 + y;
+}); // 13579
+
+练习：不要使用JavaScript内置的parseInt()函数，
+利用map和reduce操作实现一个string2int()函数：
+'use strict';
+
+function string2int(s) {
+    return s.split("").map(x=>{return +x}).reduce((x,y)=>{return x*10+y});
+}
+
+// 测试:
+if (string2int('0') === 0 && string2int('12345') === 12345 && string2int('12300') === 12300) {
+    if (string2int.toString().indexOf('parseInt') !== -1) {
+        console.log('请勿使用parseInt()!');
+    } else if (string2int.toString().indexOf('Number') !== -1) {
+        console.log('请勿使用Number()!');
+    } else {
+        console.log('测试通过!');
+    }
+}
+else {
+    console.log('测试失败!');
+}
+
+请把用户输入的不规范的英文名字，变为首字母大写，其他小写的规范名字。
+输入：['adam', 'LISA', 'barT']，输出：['Adam', 'Lisa', 'Bart']
+
+function normalize(arr) {
+    return arr.map((name)=> {return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();});
+}
+
+//
+
+filter也是一个常用的操作，它用于把Array的某些元素过滤掉，然后返回剩下的元素。
+和map()类似，Array的filter()也接收一个函数。
+和map()不同的是，filter()把传入的函数依次作用于每个元素，
+然后根据返回值是true还是false决定保留还是丢弃该元素。
+例如，在一个Array中，删掉偶数，只保留奇数，可以这么写：
+
+var arr = [1, 2, 4, 5, 6, 9, 10, 15];
+var r = arr.filter(function (x) {
+    return x % 2 !== 0;
+});
+r; // [1, 5, 9, 15]
+
+var r=arr.filter(x=>{
+    return x%2!==0;
+})
+
+把一个Array中的空字符串删掉，可以这么写：
+
+var arr = ['A', '', 'B', null, undefined, 'C', '  '];
+var r = arr.filter( (s)=> {
+    return s && s.trim(); // 注意：IE9以下的版本没有trim()方法
+});
+r; // ['A', 'B', 'C']
+
+可见用filter()这个高阶函数，关键在于正确实现一个“筛选”函数。
+
+var arr = ['A', 'B', 'C'];
+var r = arr.filter(function (element, index, self) {
+    console.log(element); // 依次打印'A', 'B', 'C'
+    console.log(index); // 依次打印0, 1, 2
+    console.log(self); // self就是变量arr
+    return true;
+});
+
+利用filter，可以巧妙地去除Array的重复元素：
+
+'use strict';
+
+var
+    r,
+    arr = ['apple', 'strawberry', 'banana', 'pear', 'apple', 'orange', 'orange', 'strawberry'];
+    r = arr.filter(function (element, index, self) {
+    return self.indexOf(element) === index;
+});
+console.log(r.toString());
+//apple,strawberry,banana,pear,orange
+
+'use strict';
+
+function get_primes(arr) {
+    return arr.filter(e=>{
+        if (e< 2) {
+        return false;
+        }else{
+            for (let i=2; i<=Math.sqrt(e); i++) {
+                if (e% i === 0) {
+                    return false;
+                }
+            }
+            return true;    
+        }
+    
+    });
+}
+// 测试:
+var
+    x,
+    r,
+    arr = [];
+for (x = 1; x < 100; x++) {
+    arr.push(x);
+}
+r = get_primes(arr);
+if (r.toString() === [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97].toString()) {
+    console.log('测试通过!');
+} else {
+    console.log('测试失败: ' + r.toString());
+}
+
+排序算法
+
+JavaScript的Array的sort()方法就是用于排序的，但是排序结果可能让你大吃一惊：
+// 看上去正常的结果:
+['Google', 'Apple', 'Microsoft'].sort(); // ['Apple', 'Google', 'Microsoft'];
+
+// apple排在了最后:
+['Google', 'apple', 'Microsoft'].sort(); // ['Google', 'Microsoft", 'apple']
+
+// 无法理解的结果:
+[10, 20, 1, 2].sort(); // [1, 10, 2, 20]
+'use strict';
+
+var arr = [10, 20, 1, 2];
+arr.sort( (x, y)=> {
+    if (x < y) {
+        return -1;
+    }
+    if (x > y) {
+        return 1;
+    }
+    return 0;
+});
+console.log(arr); // [1, 2, 10, 20]
+
+arr.sort(function (x, y) {
+    console.log('x='+x+'|y='+y);
+    if (x === y) {
+        return 0;
+    }
+    return x>y?-1:1;
+    
+});
+console.log(arr); // [1, 2, 10, 20]
+x=10|y=20
+x=10|y=1
+x=1|y=2
+x=10|y=2
+20,10,2,1
+
+最后友情提示，sort()方法会直接对Array进行修改，它返回的结果仍是当前Array：
