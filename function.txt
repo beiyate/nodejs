@@ -544,3 +544,130 @@ x=10|y=2
 20,10,2,1
 
 最后友情提示，sort()方法会直接对Array进行修改，它返回的结果仍是当前Array：
+
+
+//闭包-函数作为返回值
+我们来实现一个对Array的求和。通常情况下，求和的函数是这样定义的：
+
+function sum(arr) {
+    return arr.reduce(function (x, y) {
+        return x + y;
+    });
+}
+
+sum([1, 2, 3, 4, 5]); // 15
+
+但是，如果不需要立刻求和，而是在后面的代码中，根据需要再计算怎么办？可以不返回求和的结果，而是返回求和的函数！
+
+function lazy_sum(arr) {
+    var sum =  ()=> {
+        return arr.reduce( (x, y)=> {
+            return x + y;
+        });
+    }
+    return sum;
+}
+
+ function lazy(arr) {
+    var sum=()=>{
+        return arr.reduce((x,y)=>{
+            return x+y;
+        });
+    }
+    return sum;
+}
+请再注意一点，当我们调用lazy_sum()时，每次调用都会返回一个新的函数，即使传入相同的参数：
+
+var f1 = lazy_sum([1, 2, 3, 4, 5]);
+var f2 = lazy_sum([1, 2, 3, 4, 5]);
+f1 === f2; // false
+
+f1()和f2()的调用结果互不影响。
+
+返回闭包时牢记的一点就是：返回函数不要引用任何循环变量，或者后续会发生变化的变量。
+function count() {
+    var arr = [];
+    for (var i=1; i<=3; i++)
+    {
+        arr.push(((n)=>{ return  ()=>{ return n * n; } })(i));
+    }
+    return arr;
+}
+在面向对象的程序设计语言里，比如Java和C++，要在对象内部封装一个私有变量，可以用private修饰一个成员变量。
+
+在没有class机制，只有函数的语言里，借助闭包，同样可以封装一个私有变量。我们用JavaScript创建一个计数器：
+
+'use strict';
+
+function create_counter(initial) {
+    var x = initial || 0;
+    return {
+        inc: function () {
+            x += 1;
+            return x;
+        }
+    }
+}
+
+var c1 = create_counter();
+c1.inc(); // 1
+c1.inc(); // 2
+c1.inc(); // 3
+
+var c2 = create_counter(10);
+c2.inc(); // 11
+c2.inc(); // 12
+c2.inc(); // 13
+闭包还可以把多参数的函数变成单参数的函数。
+
+'use strict';
+
+function make_pow(n) {
+    return function (x) {
+        return Math.pow(x, n);
+    }
+}
+// 创建两个新函数:
+var pow2 = make_pow(2);
+var pow3 = make_pow(3);
+
+console.log(pow2(5)); // 25
+console.log(pow3(7)); // 343
+
+
+//箭头函数
+var fn = x => x * x;
+
+x => {
+    if (x > 0) {
+        return x * x;
+    }
+    else {
+        return - x * x;
+    }
+}
+
+// 两个参数:
+(x, y) => x * x + y * y
+
+// 无参数:
+() => 3.14
+
+// 可变参数:
+(x, y, ...rest) => {
+    var i, sum = x + y;
+    for (i=0; i<rest.length; i++) {
+        sum += rest[i];
+    }
+    return sum;
+}
+
+如果要返回一个对象，就要注意，如果是单表达式，这么写的话会报错：
+
+// SyntaxError:
+x => { foo: x }
+
+因为和函数体的{ ... }有语法冲突，所以要改为：
+
+// ok:
+x => ({ foo: x })
