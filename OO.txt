@@ -34,7 +34,8 @@ JavaScript对每个创建的对象都会设置一个原型，指向它的原型�
 
 //构造函数
 
-除了直接用{ ... }创建一个对象外，JavaScript还可以用一种构造函数的方法来创建对象。它的用法是，先定义一个构造函数：
+除了直接用{ ... }创建一个对象外，JavaScript还可以用一种构造函数的方法来创建对象。
+它的用法是，先定义一个构造函数：
 
 function Student(name) {
     this.name = name;
@@ -51,14 +52,189 @@ var xiaoming = new Student('小明');
 xiaoming.name; // '小明'
 xiaoming.hello(); // Hello, 小明!
 
-注意，如果不写new，这就是一个普通函数，它返回undefined。但是，如果写了new，它就变成了一个构造函数，它绑定的this指向新创建的对象，并默认返回this，也就是说，不需要在最后写return this;。
+注意，如果不写new，这就是一个普通函数，它返回undefined。但是，如果写了new，它就变成了一个构造函数，
+它绑定的this指向新创建的对象，并默认返回this，也就是说，不需要在最后写return this;。
 
 新创建的xiaoming的原型链是：
 
 xiaoming ----> Student.prototype ----> Object.prototype ----> null
 
-也就是说，xiaoming的原型指向函数Student的原型。如果你又创建了xiaohong、xiaojun，那么这些对象的原型与xiaoming是一样的：
+也就是说，xiaoming的原型指向函数Student的原型。如果你又创建了xiaohong、xiaojun，
+那么这些对象的原型与xiaoming是一样的：
 
 xiaoming ↘
 xiaohong -→ Student.prototype ----> Object.prototype ----> null
 xiaojun  ↗
+
+用new Student()创建的对象还从原型上获得了一个constructor属性，它指向函数Student本身：
+
+xiaoming.constructor === Student.prototype.constructor; // true
+Student.prototype.constructor === Student; // true
+
+Object.getPrototypeOf(xiaoming) === Student.prototype; // true
+
+xiaoming instanceof Student; // true
+修改代码如下：
+function Student(name) {
+    this.name = name;
+}
+
+Student.prototype.hello = function () {
+    alert('Hello, ' + this.name + '!');
+};
+
+用new创建基于原型的JavaScript的对象就是这么简单！
+
+所以，调用构造函数千万不要忘记写new。为了区分普通函数和构造函数，
+按照约定，构造函数首字母应当大写，而普通函数首字母应当小写，这样，
+一些语法检查工具如jslint将可以帮你检测到漏写的new。
+
+最后，我们还可以编写一个createStudent()函数，在内部封装所有的new操作。
+一个常用的编程模式像这样：
+
+function Student(props) {
+    this.name = props.name || '匿名'; // 默认值为'匿名'
+    this.grade = props.grade || 1; // 默认值为1
+}
+
+Student.prototype.hello = function () {
+    alert('Hello, ' + this.name + '!');
+};
+
+function createStudent(props) {
+    return new Student(props || {})
+}
+
+这个createStudent()函数有几个巨大的优点：一是不需要new来调用，
+二是参数非常灵活，可以不传，也可以这么传：
+
+var xiaoming = createStudent({
+    name: '小明'
+});
+
+xiaoming.grade; // 1
+
+
+///原型继承
+
+我们必须借助一个中间对象来实现正确的原型链，这个中间对象的原型要指向Student.prototype。
+为了实现这一点，参考道爷（就是发明JSON的那个道格拉斯）的代码，
+中间对象可以用一个空函数F来实现：
+// PrimaryStudent构造函数:
+function PrimaryStudent(props) {
+    Student.call(this, props);
+    this.grade = props.grade || 1;
+}
+
+// 空函数F:
+function F() {
+}
+
+// 把F的原型指向Student.prototype:
+F.prototype = Student.prototype;
+
+// 把PrimaryStudent的原型指向一个新的F对象，F对象的原型正好指向Student.prototype:
+PrimaryStudent.prototype = new F();
+
+// 把PrimaryStudent原型的构造函数修复为PrimaryStudent:
+PrimaryStudent.prototype.constructor = PrimaryStudent;
+
+// 继续在PrimaryStudent原型（就是new F()对象）上定义方法：
+PrimaryStudent.prototype.getGrade = function () {
+    return this.grade;
+};
+
+// 创建xiaoming:
+var xiaoming = new PrimaryStudent({
+    name: '小明',
+    grade: 2
+});
+xiaoming.name; // '小明'
+xiaoming.grade; // 2
+
+// 验证原型:
+xiaoming.__proto__ === PrimaryStudent.prototype; // true
+xiaoming.__proto__.__proto__ === Student.prototype; // true
+
+// 验证继承关系:
+xiaoming instanceof PrimaryStudent; // true
+xiaoming instanceof Student; // true
+
+如果把继承这个动作用一个inherits()函数封装起来，还可以隐藏F的定义，并简化代码：
+
+function inherits(Child, Parent) {
+    var F = function () {};
+    F.prototype = Parent.prototype;
+    Child.prototype = new F();
+    Child.prototype.constructor = Child;
+}
+
+这个inherits()函数可以复用：
+
+function Student(props) {
+    this.name = props.name || 'Unnamed';
+}
+
+Student.prototype.hello = function () {
+    alert('Hello, ' + this.name + '!');
+}
+
+function PrimaryStudent(props) {
+    Student.call(this, props);
+    this.grade = props.grade || 1;
+}
+
+// 实现原型继承链:
+inherits(PrimaryStudent, Student);
+
+// 绑定其他方法到PrimaryStudent原型:
+PrimaryStudent.prototype.getGrade = function () {
+    return this.grade;
+};
+
+
+///class继承
+
+我们先回顾用函数实现Student的方法：
+
+function Student(name) {
+    this.name = name;
+}
+
+Student.prototype.hello = function () {
+    alert('Hello, ' + this.name + '!');
+}
+
+如果用新的class关键字来编写Student，可以这样写：
+
+class Student {
+    constructor(name) {
+        this.name = name;
+    }
+
+    hello() {
+        alert('Hello, ' + this.name + '!');
+    }
+}
+class的定义包含了构造函数constructor和定义在原型对象上的函数hello()（注意没有function关键字），
+这样就避免了Student.prototype.hello = function () {...}这样分散的代码。
+
+最后，创建一个Student对象代码和前面章节完全一样：
+
+var xiaoming = new Student('小明');
+xiaoming.hello();
+
+//class继承
+直接通过extends来实现：
+
+class PrimaryStudent extends Student {
+    constructor(name, grade) {
+        super(name); // 记得用super调用父类的构造方法!
+        this.grade = grade;
+    }
+
+    myGrade() {
+        alert('I am at grade ' + this.grade);
+    }
+}
+
