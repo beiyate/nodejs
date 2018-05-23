@@ -50,3 +50,5 @@ fs.writeFile('output.txt', data, function (err) {
         console.log('ok.');
     }
 });
+
+//sync write
